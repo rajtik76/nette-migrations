@@ -47,12 +47,6 @@
 			"@tester"
 		]
 	},
-	"repositories": [
-		{
-			"type": "vcs",
-			"url": "https://github.com/rajtik76/nette-console"
-		}
-	],
 	"minimum-stability": "stable",
 	"config": {
 		"sort-packages": true,
