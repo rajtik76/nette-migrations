@@ -15,7 +15,16 @@ function createTempDir(): string
 {
 	$dir = __DIR__ . '/tmp/' . getmypid() . '-' . bin2hex(random_bytes(4));
 	Nette\Utils\FileSystem::createDir($dir);
+	register_shutdown_function(fn() => Nette\Utils\FileSystem::delete($dir));
 	return $dir;
+}
+
+
+function sqliteConnection(): Connection
+{
+	$connection = new Connection('sqlite:' . createTempDir() . '/test.sqlite');
+	SqliteForeignKeys::enable($connection);
+	return $connection;
 }
 
 
@@ -28,7 +37,7 @@ function testConnections(): array
 	Nette\Utils\FileSystem::createDir(__DIR__ . '/tmp');
 	Tester\Environment::lock('database', __DIR__ . '/tmp');
 
-	$connections = ['sqlite' => new Connection('sqlite:' . createTempDir() . '/test.sqlite')];
+	$connections = ['sqlite' => sqliteConnection()];
 	foreach (['mysql', 'mariadb', 'pgsql'] as $name) {
 		$config = getenv('MIGRATIONS_TEST_' . strtoupper($name));
 		if (is_string($config) && $config !== '') {
@@ -38,7 +47,6 @@ function testConnections(): array
 	}
 
 	foreach ($connections as $connection) {
-		SqliteForeignKeys::enable($connection);
 		createSchema($connection)->dropAllTables();
 	}
 

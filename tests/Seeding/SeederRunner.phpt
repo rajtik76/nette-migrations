@@ -48,7 +48,7 @@ foreach (testConnections() as $driver => $connection) {
 
 test('rejects classes that are not seeders', function () {
 	Assert::exception(
-		fn() => createRunner(testConnections()['sqlite'])->run(stdClass::class),
+		fn() => createRunner(sqliteConnection())->run(stdClass::class),
 		InvalidArgumentException::class,
 	);
 });

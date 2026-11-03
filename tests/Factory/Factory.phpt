@@ -39,7 +39,7 @@ foreach (testConnections() as $driver => $connection) {
 
 
 test('states are applied in order and do not leak', function () {
-	$users = new UserFactory(createExplorer(testConnections()['sqlite']));
+	$users = new UserFactory(createExplorer(sqliteConnection()));
 	$admin = $users
 		->state(['admin' => true, 'name' => 'jane'])
 		->state(fn(array $attributes): array => ['name' => ucfirst((string) $attributes['name'])]);

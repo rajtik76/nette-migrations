@@ -16,23 +16,32 @@ function insertUser(Connection $connection, string $email): int
 }
 
 
+// Each test starts from a fresh users + posts schema so a failure does not cascade
+function createTables(Connection $connection): void
+{
+	$schema = createSchema($connection);
+	$schema->dropAllTables();
+	$schema->create('users', function (Blueprint $table): void {
+		$table->id();
+		$table->string('email')->unique();
+		$table->boolean('admin')->default(false);
+		$table->string('locale', 5)->default('en');
+		$table->timestamp('seen_at')->useCurrent();
+		$table->timestamps();
+	});
+	$schema->create('posts', function (Blueprint $table): void {
+		$table->id();
+		$table->foreignId('user_id')->constrained()->cascadeOnDelete();
+		$table->string('title');
+		$table->integer('views')->default(0)->index();
+	});
+}
+
+
 foreach (testConnections() as $driver => $connection) {
-	test("$driver: create tables with defaults and constraints", function () use ($connection) {
+	test("$driver: create tables with defaults and constraints", function () use ($connection, $driver) {
+		createTables($connection);
 		$schema = createSchema($connection);
-		$schema->create('users', function (Blueprint $table): void {
-			$table->id();
-			$table->string('email')->unique();
-			$table->boolean('admin')->default(false);
-			$table->string('locale', 5)->default('en');
-			$table->timestamp('seen_at')->useCurrent();
-			$table->timestamps();
-		});
-		$schema->create('posts', function (Blueprint $table): void {
-			$table->id();
-			$table->foreignId('user_id')->constrained()->cascadeOnDelete();
-			$table->string('title');
-			$table->integer('views')->default(0)->index();
-		});
 
 		Assert::true($schema->hasTable('users'));
 		Assert::true($schema->hasTable('posts'));
@@ -43,6 +52,10 @@ foreach (testConnections() as $driver => $connection) {
 		Assert::false((bool) $user['admin']);
 		Assert::same('en', $user['locale']);
 		Assert::type(DateTimeInterface::class, $user['seen_at']);
+		// other servers fill the default in their own time zone
+		if ($driver === 'sqlite') {
+			Assert::true(abs($user['seen_at']->getTimestamp() - time()) < 60);
+		}
 		Assert::null($user['created_at']);
 
 		Assert::exception(fn() => insertUser($connection, 'jane@example.com'), UniqueConstraintViolationException::class);
@@ -58,6 +71,7 @@ foreach (testConnections() as $driver => $connection) {
 
 
 	test("$driver: alter table", function () use ($connection) {
+		createTables($connection);
 		$schema = createSchema($connection);
 		$schema->table('users', function (Blueprint $table): void {
 			$table->string('nickname')->nullable();
@@ -80,6 +94,7 @@ foreach (testConnections() as $driver => $connection) {
 
 
 	test("$driver: drop tables", function () use ($connection) {
+		createTables($connection);
 		$schema = createSchema($connection);
 		$schema->dropIfExists('missing');
 		$schema->create('tags', function (Blueprint $table): void {
