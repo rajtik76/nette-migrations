@@ -1,0 +1,7 @@
+/vendor/
+/composer.lock
+/tests/tmp/
+/tests/**/output/
+/temp/
+.DS_Store
+/.idea/

@@ -1,0 +1,63 @@
+{
+	"name": "rajtik76/nette-migrations",
+	"description": "Laravel-like migrations, schema builder, seeders and factories for Nette Database (SQLite, MySQL, PostgreSQL)",
+	"keywords": ["nette", "database", "migrations", "seeder", "factory", "schema"],
+	"type": "library",
+	"license": "MIT",
+	"require": {
+		"php": ">=8.4",
+		"ext-pdo": "*",
+		"nette/database": "^3.2",
+		"nette/di": "^3.2",
+		"nette/utils": "^4.0",
+		"rajtik76/nette-console": "@dev"
+	},
+	"require-dev": {
+		"fakerphp/faker": "^1.24",
+		"nette/tester": "^2.5",
+		"phpstan/phpstan": "^2.1",
+		"phpstan/extension-installer": "^1.4",
+		"nette/phpstan-rules": "^1.0"
+	},
+	"suggest": {
+		"fakerphp/faker": "Fake data in factories (require-dev)"
+	},
+	"autoload": {
+		"psr-4": {
+			"Rajtik\\Migrations\\": "src/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Rajtik\\Migrations\\Tests\\": "tests/"
+		}
+	},
+	"extra": {
+		"nette": {
+			"extensions": {
+				"migrations": "Rajtik\\Migrations\\DI\\MigrationsExtension(%consoleMode%)"
+			}
+		}
+	},
+	"scripts": {
+		"type:check": "phpstan analyse",
+		"tester": "tester tests -s -C",
+		"ci:check": [
+			"@type:check",
+			"@tester"
+		]
+	},
+	"repositories": [
+		{
+			"type": "path",
+			"url": "../nette-console"
+		}
+	],
+	"minimum-stability": "stable",
+	"config": {
+		"sort-packages": true,
+		"allow-plugins": {
+			"phpstan/extension-installer": true
+		}
+	}
+}

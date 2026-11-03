@@ -1,0 +1,21 @@
+<?php declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Rajtik\Migrations\Factory\Factory;
+
+
+final class {{ class }} extends Factory
+{
+	protected function table(): string
+	{
+		return '{{ table }}';
+	}
+
+
+	protected function definition(): array
+	{
+		return [
+		];
+	}
+}

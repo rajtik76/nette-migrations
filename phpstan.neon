@@ -1,0 +1,16 @@
+parameters:
+	level: 8
+
+	paths:
+		- src
+		- tests
+
+	fileExtensions:
+		- php
+		- phpt
+
+	excludePaths:
+		- tests/tmp/*
+		- tests/**/output/*
+
+	tmpDir: temp/phpstan
