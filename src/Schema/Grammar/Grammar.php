@@ -129,10 +129,16 @@ abstract class Grammar
 		if ($column->useCurrent) {
 			$sql .= ' default ' . $this->currentTimestamp();
 		} elseif ($column->hasDefault) {
-			$sql .= ' default ' . $this->value($column->default);
+			$sql .= ' default ' . $this->defaultValue($column);
 		}
 
 		return $column->primary ? $sql . ' primary key' : $sql;
+	}
+
+
+	protected function defaultValue(ColumnDefinition $column): string
+	{
+		return $this->value($column->default);
 	}
 
 

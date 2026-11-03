@@ -78,7 +78,22 @@ final class SqliteGrammar extends Grammar
 
 	protected function currentTimestamp(): string
 	{
-		return $this->unixTimestamps ? "(cast(strftime('%s', 'now') as integer))" : 'CURRENT_TIMESTAMP';
+		return $this->unixTimestamps ? "(cast(strftime('%s', 'now') as integer))" : parent::currentTimestamp();
+	}
+
+
+	// Nette reads a DATETIME column as a unix timestamp, so a date string default is stored as one
+	protected function defaultValue(ColumnDefinition $column): string
+	{
+		if (!$this->unixTimestamps || $column->type !== ColumnType::Timestamp || !is_string($column->default)) {
+			return parent::defaultValue($column);
+		}
+
+		try {
+			return (string) (new \DateTimeImmutable($column->default))->getTimestamp();
+		} catch (\Exception) {
+			throw new UnsupportedOperation("Default '$column->default' of column '$column->name' is not a valid date.");
+		}
 	}
 
 
