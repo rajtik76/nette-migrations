@@ -17,17 +17,17 @@ Commands run through [rajtik76/nette-console](https://github.com/rajtik76/nette-
 Installation
 ------------
 
-	composer require rajtik76/nette-migrations
-	composer require --dev fakerphp/faker
+    composer require rajtik76/nette-migrations
+    composer require --dev fakerphp/faker
 
 Map the database namespaces in `composer.json`:
 
 ```json
 "autoload": {
-	"psr-4": {
-		"Database\\Factories\\": "database/factories/",
-		"Database\\Seeders\\": "database/seeders/"
-	}
+    "psr-4": {
+        "Database\\Factories\\": "database/factories/",
+        "Database\\Seeders\\": "database/seeders/"
+    }
 }
 ```
 
@@ -35,9 +35,9 @@ Register factories as services, so seeders can get them injected:
 
 ```neon
 search:
-	-	in: %rootDir%/database/factories
-		classes:
-			- *Factory
+    - in: %rootDir%/database/factories
+      classes:
+        - *Factory
 ```
 
 
@@ -71,23 +71,23 @@ use Rajtik\Migrations\Schema\Schema;
 
 
 return new class extends Migration {
-	public function up(Schema $schema): void
-	{
-		$schema->create('posts', function (Blueprint $table): void {
-			$table->id();
-			$table->foreignId('user_id')->constrained()->cascadeOnDelete();
-			$table->string('title')->unique();
-			$table->text('body')->nullable();
-			$table->boolean('published')->default(false);
-			$table->timestamps();
-		});
-	}
+    public function up(Schema $schema): void
+    {
+        $schema->create('posts', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('title')->unique();
+            $table->text('body')->nullable();
+            $table->boolean('published')->default(false);
+            $table->timestamps();
+        });
+    }
 
 
-	public function down(Schema $schema): void
-	{
-		$schema->dropIfExists('posts');
-	}
+    public function down(Schema $schema): void
+    {
+        $schema->dropIfExists('posts');
+    }
 };
 ```
 
@@ -107,42 +107,42 @@ Seeders and factories
 ```php
 final class UserFactory extends Factory
 {
-	public function __construct(Explorer $database, private readonly Passwords $passwords)
-	{
-		parent::__construct($database);
-	}
+    public function __construct(Explorer $database, private readonly Passwords $passwords)
+    {
+        parent::__construct($database);
+    }
 
 
-	protected function table(): string
-	{
-		return 'users';
-	}
+    protected function table(): string
+    {
+        return 'users';
+    }
 
 
-	protected function definition(): array
-	{
-		return [
-			'name' => $this->faker()->name(),
-			'email' => $this->faker()->unique()->safeEmail(),
-			'password' => $this->passwords->hash('password'),
-		];
-	}
+    protected function definition(): array
+    {
+        return [
+            'name' => $this->faker()->name(),
+            'email' => $this->faker()->unique()->safeEmail(),
+            'password' => $this->passwords->hash('password'),
+        ];
+    }
 }
 
 
 final class DatabaseSeeder extends Seeder
 {
-	public function __construct(private readonly UserFactory $users)
-	{
-	}
+    public function __construct(private readonly UserFactory $users)
+    {
+    }
 
 
-	public function run(): void
-	{
-		$this->users->create(['email' => 'test@example.com']);
-		$this->users->state(['name' => 'Admin'])->createMany(3);
-		$this->call(PostSeeder::class);
-	}
+    public function run(): void
+    {
+        $this->users->create(['email' => 'test@example.com']);
+        $this->users->state(['name' => 'Admin'])->createMany(3);
+        $this->call(PostSeeder::class);
+    }
 }
 ```
 
@@ -154,28 +154,28 @@ Configuration
 
 ```neon
 migrations:
-	table: migrations
-	directory: %rootDir%/database/migrations
-	stubs: %rootDir%/stubs              # overrides migration*.stub, seeder.stub, factory.stub
-	sqliteForeignKeys: true
-	seeders:
-		namespace: Database\Seeders
-		directory: %rootDir%/database/seeders
-		default: DatabaseSeeder
-	factories:
-		namespace: Database\Factories
-		directory: %rootDir%/database/factories
+    table: migrations
+    directory: %rootDir%/database/migrations
+    stubs: %rootDir%/stubs              # overrides migration*.stub, seeder.stub, factory.stub
+    sqliteForeignKeys: true
+    seeders:
+        namespace: Database\Seeders
+        directory: %rootDir%/database/seeders
+        default: DatabaseSeeder
+    factories:
+        namespace: Database\Factories
+        directory: %rootDir%/database/factories
 ```
 
 
 Checks
 ------
 
-	composer run ci:check    # PHPStan level 8 + Nette Tester
+    composer run ci:check    # PHPStan level 8 + Nette Tester
 
 Integration tests use SQLite and, when configured, other databases (`dsn|user|password`):
 
-	MIGRATIONS_TEST_MYSQL='mysql:host=127.0.0.1;port=33306;dbname=migrations_test|root|secret' \
-	MIGRATIONS_TEST_MARIADB='mysql:host=127.0.0.1;port=33307;dbname=migrations_test|root|secret' \
-	MIGRATIONS_TEST_PGSQL='pgsql:host=127.0.0.1;port=54329;dbname=migrations_test|postgres|secret' \
-	composer run tester
+    MIGRATIONS_TEST_MYSQL='mysql:host=127.0.0.1;port=33306;dbname=migrations_test|root|secret' \
+    MIGRATIONS_TEST_MARIADB='mysql:host=127.0.0.1;port=33307;dbname=migrations_test|root|secret' \
+    MIGRATIONS_TEST_PGSQL='pgsql:host=127.0.0.1;port=54329;dbname=migrations_test|postgres|secret' \
+    composer run tester
