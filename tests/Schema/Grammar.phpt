@@ -1,7 +1,9 @@
 <?php declare(strict_types=1);
 
+use Nette\Database\Connection;
 use Rajtik\Migrations\Schema\Blueprint;
 use Rajtik\Migrations\Schema\Grammar\Grammar;
+use Rajtik\Migrations\Schema\Grammar\GrammarFactory;
 use Rajtik\Migrations\Schema\Grammar\MySqlGrammar;
 use Rajtik\Migrations\Schema\Grammar\PostgresGrammar;
 use Rajtik\Migrations\Schema\Grammar\SqliteGrammar;
@@ -63,6 +65,44 @@ test('sqlite current timestamp follows the driver datetime format', function () 
 
 	Assert::contains("default (cast(strftime('%s', 'now') as integer))", compile(new SqliteGrammar, $table)[0]);
 	Assert::contains('default CURRENT_TIMESTAMP', compile(new SqliteGrammar(unixTimestamps: false), $table)[0]);
+});
+
+
+test('grammar factory detects the sqlite datetime format', function () {
+	$table = new Blueprint('visits', creating: true);
+	$table->timestamp('seen_at')->useCurrent();
+	$sql = fn(array $options): string => compile(GrammarFactory::forConnection(new Connection('sqlite::memory:', options: $options)), $table)[0];
+
+	Assert::contains('strftime', $sql([]));
+	Assert::contains('CURRENT_TIMESTAMP', $sql(['formatDateTime' => "'Y-m-d H:i:s'"]));
+	Assert::contains('CURRENT_TIMESTAMP', $sql(['formatDateTime' => "'G'"]));
+});
+
+
+test('sqlite stores a date default as a unix timestamp', function () {
+	$table = new Blueprint('posts', creating: true);
+	$table->timestamp('published_at')->default('2026-01-01 00:00:00');
+	$table->timestamp('archived_at')->default(0);
+	$table->string('note')->default('2026-01-01 00:00:00');
+
+	$sql = compile(new SqliteGrammar, $table)[0];
+	Assert::contains('"published_at" DATETIME not null default ' . (new DateTimeImmutable('2026-01-01 00:00:00'))->getTimestamp(), $sql);
+	Assert::contains('"archived_at" DATETIME not null default 0', $sql);
+	Assert::contains("\"note\" varchar not null default '2026-01-01 00:00:00'", $sql);
+	Assert::contains("default '2026-01-01 00:00:00'", compile(new SqliteGrammar(unixTimestamps: false), $table)[0]);
+
+	$table = new Blueprint('posts', creating: true);
+	$table->timestamp('published_at')->default('soon-ish');
+	Assert::exception(fn() => compile(new SqliteGrammar, $table), UnsupportedOperation::class, "%a%'published_at'%a%");
+});
+
+
+test('sqlite rejects a current timestamp column on an existing table', function () {
+	$table = new Blueprint('posts', creating: false);
+	$table->timestamp('seen_at')->useCurrent();
+
+	Assert::exception(fn() => compile(new SqliteGrammar, $table), UnsupportedOperation::class, "%a%'seen_at'%a%");
+	Assert::contains('default CURRENT_TIMESTAMP', compile(new MySqlGrammar, $table)[0]);
 });
 
 
