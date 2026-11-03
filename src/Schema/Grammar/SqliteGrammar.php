@@ -43,6 +43,11 @@ final class SqliteGrammar extends Grammar
 
 	protected function compileAddColumn(Blueprint $blueprint, ColumnDefinition $column): string
 	{
+		// SQLite rejects a non-constant default on a non-empty table; fail always so the migration does not depend on data
+		if ($column->useCurrent) {
+			throw new UnsupportedOperation("SQLite cannot add column '$column->name' with a current timestamp default to an existing table, add it nullable and fill it with an update.");
+		}
+
 		$sql = parent::compileAddColumn($blueprint, $column);
 		$foreignKey = $this->inlineForeignKey($blueprint, $column);
 
