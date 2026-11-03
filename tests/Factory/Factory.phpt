@@ -25,6 +25,16 @@ foreach (testConnections() as $driver => $connection) {
 		$post = (new PostFactory($explorer))->create(['user_id' => $jane['id']]);
 		Assert::same($jane['id'], $post['user_id']);
 	});
+
+	test("$driver: timestamps round trip as DateTime", function () use ($connection) {
+		createMigrator($connection, __DIR__ . '/../fixtures/migrations')->run();
+		$now = new DateTimeImmutable('2026-01-02 03:04:05');
+
+		$user = (new UserFactory(createExplorer($connection)))->create(['created_at' => $now]);
+		Assert::type(DateTimeInterface::class, $user['created_at']);
+		Assert::same($now->getTimestamp(), $user['created_at']->getTimestamp());
+		Assert::null($user['updated_at']);
+	});
 }
 
 

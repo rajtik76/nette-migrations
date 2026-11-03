@@ -42,7 +42,7 @@ foreach (testConnections() as $driver => $connection) {
 		$user = (array) $connection->fetch('SELECT * FROM users WHERE id = ?', $userId);
 		Assert::false((bool) $user['admin']);
 		Assert::same('en', $user['locale']);
-		Assert::notNull($user['seen_at']);
+		Assert::type(DateTimeInterface::class, $user['seen_at']);
 		Assert::null($user['created_at']);
 
 		Assert::exception(fn() => insertUser($connection, 'jane@example.com'), UniqueConstraintViolationException::class);

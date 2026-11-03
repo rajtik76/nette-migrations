@@ -127,12 +127,18 @@ abstract class Grammar
 		$sql .= $column->nullable ? ' null' : ' not null';
 
 		if ($column->useCurrent) {
-			$sql .= ' default CURRENT_TIMESTAMP';
+			$sql .= ' default ' . $this->currentTimestamp();
 		} elseif ($column->hasDefault) {
 			$sql .= ' default ' . $this->value($column->default);
 		}
 
 		return $column->primary ? $sql . ' primary key' : $sql;
+	}
+
+
+	protected function currentTimestamp(): string
+	{
+		return 'CURRENT_TIMESTAMP';
 	}
 
 

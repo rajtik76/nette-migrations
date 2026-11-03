@@ -13,7 +13,7 @@ final class GrammarFactory
 		$driver = $connection->getPdo()->getAttribute(\PDO::ATTR_DRIVER_NAME);
 
 		return match ($driver) {
-			'sqlite' => new SqliteGrammar,
+			'sqlite' => new SqliteGrammar($connection->getDriver()->formatDateTime(new \DateTimeImmutable('@0')) === '0'),
 			'mysql' => new MySqlGrammar,
 			'pgsql' => new PostgresGrammar,
 			default => throw new UnsupportedOperation("Database driver '$driver' is not supported, use SQLite, MySQL/MariaDB or PostgreSQL."),

@@ -12,6 +12,13 @@ use Rajtik\Migrations\Schema\UnsupportedOperation;
 // SQLite cannot alter constraints of an existing table; a foreign key may only be added inline with a new column
 final class SqliteGrammar extends Grammar
 {
+	/** @param bool $unixTimestamps Nette SqliteDriver option formatDateTime is 'U' (default) */
+	public function __construct(
+		private readonly bool $unixTimestamps = true,
+	) {
+	}
+
+
 	public function wrap(string $identifier): string
 	{
 		return '"' . str_replace('"', '""', $identifier) . '"';
@@ -63,8 +70,15 @@ final class SqliteGrammar extends Grammar
 			ColumnType::String => 'varchar',
 			ColumnType::Text => 'text',
 			ColumnType::Boolean => 'tinyint(1)',
-			ColumnType::Timestamp => 'datetime',
+			// Nette SqliteDriver maps only the uppercase DATETIME declaration to a unix timestamp
+			ColumnType::Timestamp => 'DATETIME',
 		};
+	}
+
+
+	protected function currentTimestamp(): string
+	{
+		return $this->unixTimestamps ? "(cast(strftime('%s', 'now') as integer))" : 'CURRENT_TIMESTAMP';
 	}
 
 

@@ -45,15 +45,24 @@ test('sqlite create', function () {
 				"published" tinyint(1) not null default 0,
 				"views" integer not null default 0,
 				"status" varchar not null default 'it''s',
-				"seen_at" datetime not null default CURRENT_TIMESTAMP,
-				"created_at" datetime null,
-				"updated_at" datetime null,
+				"seen_at" DATETIME not null default (cast(strftime('%s', 'now') as integer)),
+				"created_at" DATETIME null,
+				"updated_at" DATETIME null,
 				constraint "posts_user_id_foreign" foreign key ("user_id") references "users" ("id") on delete cascade
 			)
 			SQL,
 		'create unique index "posts_title_unique" on "posts" ("title")',
 		'create index "posts_views_index" on "posts" ("views")',
 	], compile(new SqliteGrammar, postsTable()));
+});
+
+
+test('sqlite current timestamp follows the driver datetime format', function () {
+	$table = new Blueprint('visits', creating: true);
+	$table->timestamp('seen_at')->useCurrent();
+
+	Assert::contains("default (cast(strftime('%s', 'now') as integer))", compile(new SqliteGrammar, $table)[0]);
+	Assert::contains('default CURRENT_TIMESTAMP', compile(new SqliteGrammar(unixTimestamps: false), $table)[0]);
 });
 
 
