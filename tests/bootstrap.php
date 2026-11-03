@@ -25,6 +25,7 @@ function createTempDir(): string
  */
 function testConnections(): array
 {
+	Nette\Utils\FileSystem::createDir(__DIR__ . '/tmp');
 	Tester\Environment::lock('database', __DIR__ . '/tmp');
 
 	$connections = ['sqlite' => new Connection('sqlite:' . createTempDir() . '/test.sqlite')];
@@ -48,4 +49,29 @@ function testConnections(): array
 function createSchema(Connection $connection): Schema
 {
 	return new Schema($connection, GrammarFactory::forConnection($connection));
+}
+
+
+/** @return list<string> */
+function columnNames(Connection $connection, string $table): array
+{
+	return array_column($connection->getDriver()->getColumns($table), 'name');
+}
+
+
+function createMigrator(Connection $connection, string $directory): Rajtik\Migrations\Migration\Migrator
+{
+	$schema = createSchema($connection);
+
+	return new Rajtik\Migrations\Migration\Migrator(
+		new Rajtik\Migrations\Migration\MigrationFiles($directory),
+		new Rajtik\Migrations\Migration\MigrationRepository($schema),
+		$schema,
+	);
+}
+
+
+function createExplorer(Connection $connection): Nette\Database\Explorer
+{
+	return new Nette\Database\Explorer($connection, new Nette\Database\Structure($connection, new Nette\Caching\Storages\DevNullStorage));
 }
