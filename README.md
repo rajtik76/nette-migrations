@@ -100,6 +100,27 @@ Schema: `create`, `table`, `drop`, `dropIfExists`, `hasTable`, `statement`, `con
 Each migration runs in a transaction on SQLite and PostgreSQL. MySQL/MariaDB commit DDL implicitly.
 SQLite can add a foreign key only together with a new column and cannot drop one.
 
+SQLite timestamps follow the Nette `formatDateTime` driver option. With the default `U` they are
+stored as unix timestamps, and a date string default is converted when the migration compiles.
+With any other format, `useCurrent()` falls back to `CURRENT_TIMESTAMP`, which SQLite fills in UTC.
+SQLite cannot add a `useCurrent()` column to an existing table; add it nullable and fill it with an update.
+
+
+Upgrading from 0.1.0
+--------------------
+
+SQLite timestamp columns created by 0.1.0 are declared as lowercase `datetime`, which Nette
+does not read as a unix timestamp. Recreate each one in a migration:
+
+```sql
+alter table users add column seen_at_new DATETIME null;
+update users set seen_at_new = case typeof(seen_at) when 'text' then cast(strftime('%s', seen_at) as integer) else seen_at end;
+alter table users drop column seen_at;
+alter table users rename column seen_at_new to seen_at;
+```
+
+The recreated column is nullable and has no default. Drop indexes on the column before dropping it.
+
 
 Seeders and factories
 ---------------------
